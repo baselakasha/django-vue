@@ -24,3 +24,11 @@ class RegisterView(generics.CreateAPIView):
 
 class CustomTokenRefreshView(TokenRefreshView):
     permission_classes = [AllowAny]
+
+class UserView(generics.RetrieveAPIView):
+    queryset = get_user_model().objects.all()
+    serializer_class = serializers.UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
