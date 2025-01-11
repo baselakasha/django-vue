@@ -1,42 +1,47 @@
-import axios from 'axios';
-import { useAuthStore } from './stores/auth';
+import axios from 'axios'
+import { applyAuthTokenInterceptor, applyStorage } from 'axios-jwt'
+import { STORAGE_KEY } from 'axios-jwt/src/StorageKey'
+
+const BASE_URL = 'http://localhost:8000/api'
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: BASE_URL,
   headers: {
-    'Content-Type': 'application/json'    
+    'Content-Type': 'application/json'
   }
 })
 
-// Request interceptor to add the Authorization header
-apiClient.interceptors.request.use(config => {
-  const authStore = useAuthStore();
-  if (authStore.token) {
-      config.headers.Authorization = `Bearer ${authStore.token}`;
-  }
-  return config;
-}, error => {
-  return Promise.reject(error);
-});
+const requestRefresh = (refresh) => {
+  // Notice that this is the global axios instance, not the apiClient!  <-- important
+  return axios
+    .post(`${BASE_URL}/token/refresh/`, { refresh })
+    .then((response) => response.data.access)
+}
 
-// Response interceptor to refresh token on 401 error
-apiClient.interceptors.response.use(response => {
-  return response;
-}, async error => {
-  const authStore = useAuthStore();
-  if (!authStore.token) {
-      return Promise.reject(error);
-  }
-  const originalRequest = error.config;
-  
-  if (error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      await authStore.refreshToken();
-      originalRequest.headers.Authorization = `Bearer ${authStore.token}`;
-      return apiClient(originalRequest);
-  }
+applyAuthTokenInterceptor(apiClient, {
+  // Notice that this uses the apiClient instance.  <-- important
+  requestRefresh,
+  header: 'Authorization', // header name
+  headerPrefix: 'Bearer '
+})
+// make new storage type
 
-  return Promise.reject(error);
-});
+applyStorage({
+  set: (key, value) => {
+    window.localStorage.setItem(key, value)
+    if (key === STORAGE_KEY) {
+      window.dispatchEvent(new Event('storage-changed'))
+    }
+  },
+  get: (key) => {
+    return window.localStorage.getItem(key)
+  },
+  remove: (key) => {
+    window.localStorage.removeItem(key)
+    if (key === STORAGE_KEY) {
+      window.dispatchEvent(new Event('storage-changed'))
+    }
+  }
+})
 
-export default apiClient 
+export default apiClient

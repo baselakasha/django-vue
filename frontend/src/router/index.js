@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { isLoggedIn } from 'axios-jwt'
 import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
@@ -18,27 +18,25 @@ const router = createRouter({
     {
       path: '/register',
       name: 'register',
-      component: () => import('../views/RegisterView.vue')  
+      component: () => import('../views/RegisterView.vue')
     }
   ]
-});
+})
 
-
-router.beforeEach((to, from, next) => {
-  const publicPages = ['/login', '/register'];
-  const authRequired = !publicPages.includes(to.path);
-  const authStore = useAuthStore();
-  const loggedIn = authStore.isAuthenticated;
+router.beforeEach(async (to, from, next) => {
+  const publicPages = ['/login', '/register']
+  const authRequired = !publicPages.includes(to.path)
+  const loggedIn = await isLoggedIn()
 
   if ((to.path === '/login' || to.path == '/register') && loggedIn) {
-      return next('/');
-  }
-  
-  if (authRequired && !loggedIn) {
-      return next('/login');
+    return next('/')
   }
 
-  next();
-});
+  if (authRequired && !loggedIn) {
+    return next('/login')
+  }
+
+  next()
+})
 
 export default router

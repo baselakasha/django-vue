@@ -23,9 +23,8 @@ const enableEdit = () => {
 }
 
 const todoTitleChange = (e) => {
-  emit('todo-title-change', props.todo.id, TodoItemState.pending_value)
   TodoItemState.editing = false
-  TodoItemState.pending_value = props.todo.title
+  emit('todo-title-change', props.todo.id, TodoItemState.pending_value);
 }
 
 const showDeleteConfirmation = () => {

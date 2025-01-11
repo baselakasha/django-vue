@@ -1,49 +1,47 @@
 <script setup>
 import { reactive } from 'vue'
-import { useAuthStore } from '../stores/auth';
-import router  from '../router';
-
-const authStore = useAuthStore();
+import { login } from '../auth'
+import router from '../router'
 
 const form_state = reactive({
   username: '',
   password: '',
-  invalid: false, 
+  invalid: false
 })
 
-const login = async () => {
-    try {
-        await authStore.login(
-            {
-                username: form_state.username,
-                password: form_state.password
-            }
-        );
-        router.push('/');
+const formSubmitted = async () => {
+  try {
+    await login({
+      username: form_state.username,
+      password: form_state.password
+    })
+    router.push('/')
+  } catch (error) {
+    console.error(error)
+    if (error.response.status === 401) {
+      form_state.invalid = true
+    } else {
+      console.error(error)
     }
-    catch (error) {
-      if (error.response.status === 401) {
-        form_state.invalid = true;
-      }
-      else {
-        console.error(error);
-      }
-    }
+  }
 }
-
 </script>
 
 <template>
   <div class="container p-5 rounded has-background-light mt-5">
     <h1 class="title is-3">Login</h1>
-    <div v-if="form_state.invalid" class="notification is-danger">
-      Invalid username or password
-    </div>
-    <form action="" @submit.prevent="login">
+    <div v-if="form_state.invalid" class="notification is-danger">Invalid username or password</div>
+    <form action="" @submit.prevent="formSubmitted">
       <div class="field">
         <label class="label" for="username">Username</label>
         <p class="control has-icons-left">
-          <input v-model="form_state.username" id="username" class="input" type="text" placeholder="" />
+          <input
+            v-model="form_state.username"
+            id="username"
+            class="input"
+            type="text"
+            placeholder=""
+          />
           <span class="icon is-small is-left">
             <i class="fas fa-user"></i>
           </span>
@@ -52,7 +50,13 @@ const login = async () => {
       <div class="field">
         <label class="label" for="password">Password</label>
         <p class="control has-icons-left">
-          <input v-model="form_state.password" id="password" class="input" type="password" placeholder="" />
+          <input
+            v-model="form_state.password"
+            id="password"
+            class="input"
+            type="password"
+            placeholder=""
+          />
           <span class="icon is-small is-left">
             <i class="fas fa-lock"></i>
           </span>

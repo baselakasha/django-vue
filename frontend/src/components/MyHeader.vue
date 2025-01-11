@@ -1,13 +1,15 @@
 <script setup>
-  import { RouterLink } from 'vue-router';
-  import router  from '../router';
-  import { useAuthStore } from '../stores/auth';
-  const authStore = useAuthStore();
-  
-  const logout = () => {
-    authStore.logout();
-    router.push('/login');
-  }
+import { RouterLink } from 'vue-router'
+import router from '../router'
+import { logout } from '../auth'
+import { useLoginState } from '../stores/login_state'
+
+const logoutButtonPressed = () => {
+  logout()
+  router.push('/login')
+}
+
+const loginState = useLoginState()
 </script>
 
 <template>
@@ -35,19 +37,17 @@
 
         <div id="navbarBasicExample" class="navbar-menu">
           <div class="navbar-start">
-            <RouterLink to="/" class="navbar-item">
-              Home
-            </RouterLink>
-            <RouterLink v-if="!authStore.isAuthenticated" to="/login" class="navbar-item">
+            <RouterLink to="/" class="navbar-item"> Home </RouterLink>
+            <RouterLink v-if="!loginState.loggedIn" to="/login" class="navbar-item">
               Login
             </RouterLink>
-            <RouterLink v-if="!authStore.isAuthenticated" to="/register" class="navbar-item">
+            <RouterLink v-if="!loginState.loggedIn" to="/register" class="navbar-item">
               Register
             </RouterLink>
           </div>
 
           <div class="navbar-end">
-            <button v-if="authStore.isAuthenticated" @click='logout' class="has-text-danger" >
+            <button v-if="loginState.loggedIn" @click="logoutButtonPressed" class="has-text-danger">
               Logout
             </button>
           </div>
